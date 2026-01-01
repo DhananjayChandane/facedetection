@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+
+{% block title %}Register Face - FaceAttendance{% endblock %}
+
+{% block head_extra %}
+<style>
+    #video-container {
+        position: relative;
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    #video {
+        width: 100%;
+        height: auto;
+        display: block;
+        transform: scaleX(-1); /* Mirror effect */
+    }
+    #overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+    .status-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 10;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="text-center mb-4">
+    <h2 class="text-primary"><i class="fas fa-user-plus me-2"></i>Register Your Face</h2>
+    <p class="text-muted">Position your face clearly in the camera frame.</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div id="video-container" class="bg-dark">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="overlay"></canvas>
+                    <div class="status-badge">
+                        <span id="status" class="badge bg-secondary">Initializing Camera...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <div class="d-grid gap-2 d-md-block">
+                    <button id="start-btn" class="btn btn-primary px-4"><i class="fas fa-play me-2"></i>Start Camera</button>
+                    <button id="capture-btn" class="btn btn-success px-4" disabled><i class="fas fa-camera me-2"></i>Capture & Register</button>
+                    <button id="stop-btn" class="btn btn-danger px-4" disabled><i class="fas fa-stop me-2"></i>Stop</button>
+                </div>
+                <div class="mt-3 d-flex justify-content-center align-items-center gap-2">
+                    <label for="camera-select" class="form-label mb-0 small">Camera:</label>
+                    <select id="camera-select" class="form-select form-select-sm" style="max-width:220px;"></select>
+                </div>
+                <div class="mt-3">
+                    <p id="message" class="text-muted mb-0">Click Start Camera to begin.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/face_capture.js') }}"></script>
+{% endblock %}

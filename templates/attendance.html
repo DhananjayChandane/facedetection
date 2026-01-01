@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+
+{% block title %}Attendance Records - {{ classroom.class_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">{{ classroom.class_name }}</h2>
+        <span class="badge bg-secondary">{{ classroom.class_code }}</span>
+    </div>
+    {% if user_type == 'teacher' %}
+    <div>
+        <a href="{{ url_for('download_attendance', classroom_id=classroom.id) }}" class="btn btn-success">
+            <i class="fas fa-file-excel me-2"></i>Download Report
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-light">
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Attendance Log</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        {% if user_type == 'teacher' %}
+                        <th>Student Name</th>
+                        <th>Username</th>
+                        {% endif %}
+                        <th>Status</th>
+                        <th>Time</th>
+                        <th>Method</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendance_records %}
+                    <tr>
+                        <td>{{ record.formatted_date }}</td>
+                        {% if user_type == 'teacher' %}
+                        <td>{{ record.student_name }}</td>
+                        <td>{{ record.username }}</td>
+                        {% endif %}
+                        <td>
+                            {% if record.status == 'P' %}
+                                <span class="badge bg-success">Present</span>
+                            {% elif record.status == 'A' %}
+                                <span class="badge bg-danger">Absent</span>
+                            {% elif record.status == 'L' %}
+                                <span class="badge bg-warning text-dark">Late</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ record.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ record.marked_at }}</td>
+                        <td>
+                            <small class="text-muted">{{ record.verification_method|default('Manual') }}</small>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="{% if user_type == 'teacher' %}6{% else %}4{% endif %}" class="text-center py-4">
+                            <p class="text-muted mb-0">No attendance records found.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

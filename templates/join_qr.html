@@ -1,0 +1,133 @@
+{% extends "layout.html" %}
+
+{% block title %}QR Codes - {{ classroom.class_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-qrcode me-2"></i>Classroom QR Codes</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="me-3">
+                        <span class="badge bg-primary fs-6">{{ classroom.class_code }}</span>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-5">{{ classroom.class_name }}</div>
+                        <div class="small text-muted">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ classroom.venue or 'Venue not set' }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row g-4">
+                    <!-- Join QR Code -->
+                    <div class="col-md-6">
+                        <div class="text-center p-3 border rounded">
+                            <h6 class="mb-3"><i class="fas fa-door-open me-2"></i>Join Classroom</h6>
+                            <div id="qrcode-join" class="d-inline-block p-3 bg-white border rounded mb-3"></div>
+                            <p class="small text-muted mb-2">Students scan this to join the class</p>
+                            <a class="btn btn-sm btn-success" href="https://wa.me/?text={{ ('Join my class ' ~ classroom.class_name ~ ': ' ~ (join_url or url_for('join_classroom_qr', class_code=classroom.class_code, _external=True))) | urlencode }}" target="_blank">
+                                <i class="fab fa-whatsapp me-1"></i>Share
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Attendance QR Code (if teacher) -->
+                    {% if session.user_type == 'teacher' and attendance_url %}
+                    <div class="col-md-6">
+                        <div class="text-center p-3 border rounded">
+                            <h6 class="mb-3"><i class="fas fa-check-circle me-2"></i>Mark Attendance</h6>
+                            <div id="qrcode-attendance" class="d-inline-block p-3 bg-white border rounded mb-3"></div>
+                            <p class="small text-muted mb-2">Students scan this to mark attendance</p>
+                            <a class="btn btn-sm btn-primary" href="https://wa.me/?text={{ ('Mark attendance for ' ~ classroom.class_name ~ ': ' ~ attendance_url) | urlencode }}" target="_blank">
+                                <i class="fab fa-whatsapp me-1"></i>Share
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-4">
+                    <div class="alert alert-info mb-3">
+                        <strong>Join Link:</strong><br>
+                        <a href="{{ join_url or url_for('join_classroom_qr', class_code=classroom.class_code, _external=True) }}" target="_blank" class="small">
+                            {{ join_url or url_for('join_classroom_qr', class_code=classroom.class_code, _external=True) }}
+                        </a>
+                    </div>
+                    
+                    {% if session.user_type == 'student' %}
+                    <form method="POST" action="{{ url_for('join_classroom') }}">
+                        <input type="hidden" name="class_code" value="{{ classroom.class_code }}">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i>Join Class
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const joinUrl = "{{ join_url or url_for('join_classroom_qr', class_code=classroom.class_code, _external=True) }}";
+    
+    // Generate Join QR Code
+    const joinQrEl = document.getElementById("qrcode-join");
+    if (joinQrEl) {
+        try {
+            new QRCode(joinQrEl, {
+                text: joinUrl,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        } catch (e) {
+            // Fallback to simple API
+            new QRCode(joinQrEl, joinUrl);
+        }
+    }
+    
+    // Generate Attendance QR Code (if teacher)
+    {% if session.user_type == 'teacher' and attendance_url %}
+    const attendanceUrl = "{{ attendance_url }}";
+    const attendanceQrEl = document.getElementById("qrcode-attendance");
+    if (attendanceQrEl) {
+        try {
+            new QRCode(attendanceQrEl, {
+                text: attendanceUrl,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        } catch (e) {
+            // Fallback to simple API
+            new QRCode(attendanceQrEl, attendanceUrl);
+        }
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

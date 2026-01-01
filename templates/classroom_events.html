@@ -1,0 +1,411 @@
+{% extends "layout.html" %}
+
+{% block title %}Classroom Events - FaceAttendance{% endblock %}
+
+{% block head_extra %}
+<style>
+    .event-card {
+        background: white;
+        border-left: 4px solid #667eea;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+
+    .event-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .event-card.exam {
+        border-left-color: #ff6b6b;
+    }
+
+    .event-card.assignment {
+        border-left-color: #ffd93d;
+    }
+
+    .event-card.lecture {
+        border-left-color: #00d4ff;
+    }
+
+    .event-card.project {
+        border-left-color: #38ef7d;
+    }
+
+    .event-card.quiz {
+        border-left-color: #764ba2;
+    }
+
+    .event-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .event-badge.exam {
+        background: #ff6b6b;
+        color: white;
+    }
+
+    .event-badge.assignment {
+        background: #ffd93d;
+        color: #333;
+    }
+
+    .event-badge.lecture {
+        background: #00d4ff;
+        color: white;
+    }
+
+    .event-badge.project {
+        background: #38ef7d;
+        color: white;
+    }
+
+    .event-badge.quiz {
+        background: #764ba2;
+        color: white;
+    }
+
+    .event-badge.other {
+        background: #667eea;
+        color: white;
+    }
+
+    .event-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+    }
+
+    .event-date {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .event-description {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 12px;
+    }
+
+    .event-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+    .btn-event {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-event-primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-event-primary:hover {
+        background: #764ba2;
+    }
+
+    .btn-event-danger {
+        background: #ff6b6b;
+        color: white;
+    }
+
+    .btn-event-danger:hover {
+        background: #ee5a6f;
+    }
+
+    .event-form {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: #1a1a1a;
+        font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #999;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    .empty-state p {
+        margin: 0;
+        font-size: 16px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title i {
+        color: #667eea;
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .event-actions {
+            flex-wrap: wrap;
+        }
+
+        .btn-event {
+            flex: 1;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="mb-4">
+        <h1 style="font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px;">
+            <i class="fas fa-calendar-alt me-2" style="color: #667eea;"></i>
+            {{ classroom.class_name }} - Events
+        </h1>
+        <p style="color: #666; margin: 0;">
+            <i class="fas fa-code me-2"></i>
+            Class Code: <strong>{{ classroom.class_code }}</strong>
+        </p>
+    </div>
+
+    <!-- Create Event Form (Teacher Only) -->
+    {% if is_teacher %}
+    <div class="event-form">
+        <h3 style="margin-bottom: 20px; color: #1a1a1a;">
+            <i class="fas fa-plus-circle me-2" style="color: #667eea;"></i>
+            Create New Event
+        </h3>
+        
+        <form method="POST" action="{{ url_for('classroom_events', classroom_id=classroom.id) }}">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="event_title">Event Title *</label>
+                    <input type="text" id="event_title" name="event_title" placeholder="e.g., Midterm Exam" required>
+                </div>
+                <div class="form-group">
+                    <label for="event_type">Event Type *</label>
+                    <select id="event_type" name="event_type" required>
+                        <option value="assignment">Assignment</option>
+                        <option value="exam">Exam</option>
+                        <option value="lecture">Lecture</option>
+                        <option value="project">Project</option>
+                        <option value="quiz">Quiz</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="event_date">Date *</label>
+                    <input type="date" id="event_date" name="event_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="event_time">Time</label>
+                    <input type="time" id="event_time" name="event_time">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="event_description">Description</label>
+                <textarea id="event_description" name="event_description" placeholder="Enter event details..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-event btn-event-primary" style="width: 100%; justify-content: center;">
+                <i class="fas fa-save"></i>
+                Create Event
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Upcoming Events -->
+    <div class="mb-4">
+        <h2 class="section-title">
+            <i class="fas fa-clock"></i>
+            Upcoming Events
+        </h2>
+
+        {% if upcoming_events %}
+        <div>
+            {% for event in upcoming_events %}
+            <div class="event-card {{ event.event_type }}">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="flex: 1;">
+                        <span class="event-badge {{ event.event_type }}">
+                            {{ event.event_type|upper }}
+                        </span>
+                        <div class="event-title">{{ event.title }}</div>
+                        <div class="event-date">
+                            <i class="fas fa-calendar"></i>
+                            {{ event.event_date.strftime('%B %d, %Y') }}
+                            {% if event.event_time %}
+                            <span style="margin-left: 10px;">
+                                <i class="fas fa-clock"></i>
+                                {{ event.event_time|format_time }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% if event.description %}
+                        <div class="event-description">{{ event.description }}</div>
+                        {% endif %}
+                    </div>
+                    {% if is_teacher %}
+                    <div class="event-actions" style="margin-left: 20px;">
+                        <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" style="display: inline;" onsubmit="return confirm('Delete this event?');">
+                            <button type="submit" class="btn-event btn-event-danger">
+                                <i class="fas fa-trash"></i>
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-calendar-check"></i>
+            <p>No upcoming events scheduled</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Past Events -->
+    {% if past_events %}
+    <div>
+        <h2 class="section-title">
+            <i class="fas fa-history"></i>
+            Past Events
+        </h2>
+
+        <div>
+            {% for event in past_events %}
+            <div class="event-card {{ event.event_type }}" style="opacity: 0.7;">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="flex: 1;">
+                        <span class="event-badge {{ event.event_type }}">
+                            {{ event.event_type|upper }}
+                        </span>
+                        <div class="event-title">{{ event.title }}</div>
+                        <div class="event-date">
+                            <i class="fas fa-calendar"></i>
+                            {{ event.event_date.strftime('%B %d, %Y') }}
+                            {% if event.event_time %}
+                            <span style="margin-left: 10px;">
+                                <i class="fas fa-clock"></i>
+                                {{ event.event_time|format_time }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% if event.description %}
+                        <div class="event-description">{{ event.description }}</div>
+                        {% endif %}
+                    </div>
+                    {% if is_teacher %}
+                    <div class="event-actions" style="margin-left: 20px;">
+                        <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" style="display: inline;" onsubmit="return confirm('Delete this event?');">
+                            <button type="submit" class="btn-event btn-event-danger">
+                                <i class="fas fa-trash"></i>
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Set minimum date to today
+    document.getElementById('event_date').min = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}

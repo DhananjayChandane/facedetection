@@ -1,0 +1,356 @@
+{% extends "layout.html" %}
+
+{% block title %}Event Details - FaceAttendance{% endblock %}
+
+{% block head_extra %}
+<style>
+    .event-detail-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    .event-detail-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+    }
+
+    .event-detail-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0 0 10px 0;
+    }
+
+    .event-detail-header p {
+        margin: 5px 0;
+        opacity: 0.9;
+    }
+
+    .event-detail-body {
+        padding: 30px;
+    }
+
+    .event-info-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+
+    .event-info-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .event-info-icon {
+        width: 50px;
+        height: 50px;
+        background: #f5f7fa;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #667eea;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .event-info-content h3 {
+        margin: 0 0 5px 0;
+        font-size: 14px;
+        color: #666;
+        font-weight: 500;
+    }
+
+    .event-info-content p {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a1a1a;
+    }
+
+    .event-description-section {
+        margin-bottom: 30px;
+        padding-bottom: 30px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .event-description-section h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 12px;
+    }
+
+    .event-description-section p {
+        color: #666;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .event-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-action {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #764ba2;
+        transform: translateY(-2px);
+    }
+
+    .btn-danger {
+        background: #ff6b6b;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #ee5a6f;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: #e0e0e0;
+        color: #1a1a1a;
+    }
+
+    .btn-secondary:hover {
+        background: #d0d0d0;
+    }
+
+    .edit-form {
+        background: #f5f7fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 20px;
+        display: none;
+    }
+
+    .edit-form.active {
+        display: block;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: #1a1a1a;
+        font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .event-info-row {
+            grid-template-columns: 1fr;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .event-actions {
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            flex: 1;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="event-detail-card">
+        <!-- Header -->
+        <div class="event-detail-header">
+            <h1>{{ event.title }}</h1>
+            <p>
+                <i class="fas fa-book me-2"></i>
+                {{ classroom.class_name }} ({{ classroom.class_code }})
+            </p>
+            <p>
+                <span class="badge" style="background: rgba(255, 255, 255, 0.3); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                    {{ event.event_type|upper }}
+                </span>
+            </p>
+        </div>
+
+        <!-- Body -->
+        <div class="event-detail-body">
+            <!-- Event Information -->
+            <div class="event-info-row">
+                <div class="event-info-item">
+                    <div class="event-info-icon">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                    <div class="event-info-content">
+                        <h3>Date</h3>
+                        <p>{{ event.event_date.strftime('%B %d, %Y') }}</p>
+                    </div>
+                </div>
+
+                <div class="event-info-item">
+                    <div class="event-info-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="event-info-content">
+                        <h3>Time</h3>
+                        <p>
+                            {% if event.event_time %}
+                                {{ event.event_time.strftime('%I:%M %p') }}
+                            {% else %}
+                                All Day
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            {% if event.description %}
+            <div class="event-description-section">
+                <h3>Description</h3>
+                <p>{{ event.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="event-actions">
+                {% if is_teacher %}
+                <button onclick="toggleEditForm()" class="btn-action btn-primary">
+                    <i class="fas fa-edit"></i>
+                    Edit Event
+                </button>
+                <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" style="display: inline;" onsubmit="return confirm('Delete this event?');">
+                    <button type="submit" class="btn-action btn-danger">
+                        <i class="fas fa-trash"></i>
+                        Delete Event
+                    </button>
+                </form>
+                {% endif %}
+                <a href="{{ url_for('classroom_events', classroom_id=classroom.id) }}" class="btn-action btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Events
+                </a>
+            </div>
+
+            <!-- Edit Form (Teacher Only) -->
+            {% if is_teacher %}
+            <div class="edit-form" id="editForm">
+                <h3 style="margin-bottom: 20px; color: #1a1a1a;">Edit Event</h3>
+                
+                <form method="POST" action="{{ url_for('view_event', event_id=event.id) }}">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="event_title">Event Title *</label>
+                            <input type="text" id="event_title" name="event_title" value="{{ event.title }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="event_type">Event Type *</label>
+                            <select id="event_type" name="event_type" required>
+                                <option value="assignment" {% if event.event_type == 'assignment' %}selected{% endif %}>Assignment</option>
+                                <option value="exam" {% if event.event_type == 'exam' %}selected{% endif %}>Exam</option>
+                                <option value="lecture" {% if event.event_type == 'lecture' %}selected{% endif %}>Lecture</option>
+                                <option value="project" {% if event.event_type == 'project' %}selected{% endif %}>Project</option>
+                                <option value="quiz" {% if event.event_type == 'quiz' %}selected{% endif %}>Quiz</option>
+                                <option value="other" {% if event.event_type == 'other' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="event_date">Date *</label>
+                            <input type="date" id="event_date" name="event_date" value="{{ event.event_date }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="event_time">Time</label>
+                            <input type="time" id="event_time" name="event_time" value="{% if event.event_time %}{{ event.event_time.strftime('%H:%M') }}{% endif %}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="event_description">Description</label>
+                        <textarea id="event_description" name="event_description">{{ event.description or '' }}</textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 12px;">
+                        <button type="submit" class="btn-action btn-primary">
+                            <i class="fas fa-save"></i>
+                            Save Changes
+                        </button>
+                        <button type="button" onclick="toggleEditForm()" class="btn-action btn-secondary">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleEditForm() {
+        const form = document.getElementById('editForm');
+        form.classList.toggle('active');
+    }
+</script>
+{% endblock %}

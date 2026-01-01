@@ -1,0 +1,1259 @@
+{% extends "layout.html" %}
+
+{% block title %}Student Dashboard - FaceAttendance{% endblock %}
+
+{% block head_extra %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --warning-gradient: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+        --danger-gradient: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        --info-gradient: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+        --dark-gradient: linear-gradient(135deg, #434343 0%, #000000 100%);
+        --glass-bg: rgba(255, 255, 255, 0.08);
+        --glass-border: rgba(255, 255, 255, 0.2);
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+    }
+
+    .gradient-header {
+        background: var(--primary-gradient);
+        border-radius: 20px 20px 0 0;
+        padding: 1.5rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .gradient-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+        animation: shimmer 3s infinite linear;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .stat-card {
+        border-radius: 16px;
+        padding: 1.5rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+    }
+
+    .stat-icon {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0.3;
+        font-size: 3rem;
+    }
+
+    .face-status {
+        border-radius: 50px;
+        padding: 10px 20px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        backdrop-filter: blur(5px);
+        border: 2px solid transparent;
+        background: linear-gradient(white, white) padding-box,
+                    var(--success-gradient) border-box;
+    }
+
+    .face-status.warning {
+        background: linear-gradient(white, white) padding-box,
+                    var(--warning-gradient) border-box;
+    }
+
+    .classroom-card {
+        border-radius: 16px;
+        border: none;
+        overflow: hidden;
+        position: relative;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .classroom-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .classroom-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .attendance-progress {
+        height: 10px;
+        border-radius: 10px;
+        background: #e9ecef;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .attendance-progress::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.3) 50%, transparent 75%);
+        background-size: 200% 100%;
+        animation: progressShine 2s infinite linear;
+    }
+
+    @keyframes progressShine {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    .quick-action-btn {
+        border-radius: 12px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.3s ease;
+        border: 2px solid #e9ecef;
+        background: white;
+        color: #495057;
+    }
+
+    .quick-action-btn:hover {
+        border-color: #667eea;
+        background: #f8f9fe;
+        transform: translateX(5px);
+    }
+
+    .quick-action-btn i {
+        font-size: 1.5rem;
+        color: #667eea;
+    }
+
+    .floating-badge {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background: var(--danger-gradient);
+        color: white;
+        border-radius: 50px;
+        padding: 5px 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(255, 65, 108, 0.3);
+        z-index: 1;
+    }
+
+    .time-display {
+        font-family: 'Courier New', monospace;
+        background: var(--dark-gradient);
+        color: white;
+        padding: 20px;
+        border-radius: 16px;
+        text-align: center;
+        margin-bottom: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .time-display::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(
+            transparent,
+            rgba(255,255,255,0.1),
+            transparent 30%
+        );
+        animation: rotate 4s linear infinite;
+    }
+
+    @keyframes rotate {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .pulse-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #38ef7d;
+        margin-right: 8px;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(56, 239, 125, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(56, 239, 125, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(56, 239, 125, 0); }
+    }
+
+    .class-code-badge {
+        background: var(--primary-gradient);
+        color: white;
+        font-family: 'Courier New', monospace;
+        letter-spacing: 1px;
+        border-radius: 8px;
+        padding: 5px 10px;
+        font-weight: 600;
+        display: inline-block;
+        margin: 2px;
+    }
+
+    .hover-lift {
+        transition: transform 0.2s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-2px);
+    }
+
+    .glow-text {
+        text-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+    }
+
+    .feature-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 15px;
+        background: var(--primary-gradient);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Welcome Section -->
+<div class="container-fluid px-4 mt-4">
+    <!-- Stats Overview -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card" style="background: var(--primary-gradient);">
+                <div class="stat-icon">
+                    <i class="fas fa-chalkboard"></i>
+                </div>
+                <div class="h1 fw-bold mb-0">{{ total_classrooms|default(0) }}</div>
+                <p class="mb-0 opacity-75">Active Classes</p>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card" style="background: var(--success-gradient);">
+                <div class="stat-icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="h1 fw-bold mb-0">{{ overall_attendance|default(0) }}%</div>
+                <p class="mb-0 opacity-75">Overall Attendance</p>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card" style="background: var(--info-gradient);">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="h1 fw-bold mb-0">{{ total_present|default(0) }}</div>
+                <p class="mb-0 opacity-75">Present Days</p>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card" style="background: var(--warning-gradient);">
+                <div class="stat-icon">
+                    <i class="fas fa-user-clock"></i>
+                </div>
+                <div class="h1 fw-bold mb-0">{{ today_attendance|length }}</div>
+                <p class="mb-0 opacity-75">Marked Today</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row g-4">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+            <!-- Profile Card -->
+            <div class="glass-card mb-4">
+                <div class="gradient-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-white p-3 me-3">
+                                <i class="fas fa-user-graduate fa-2x text-primary"></i>
+                            </div>
+                            <div>
+                                <h3 class="fw-bold mb-1 glow-text">{{ session.full_name }}</h3>
+                                <p class="mb-0 opacity-75">
+                                    <i class="fas fa-user-tag me-2"></i>Student ID: {{ session.username }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            {% if face_registered %}
+                            <div class="face-status">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Face Registered</span>
+                            </div>
+                            {% else %}
+                            <div class="face-status warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>Register Face</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-7">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="feature-icon">
+                                    <i class="fas fa-id-card"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold mb-1">Face Registration Status</h5>
+                                    <p class="text-muted mb-0">
+                                        {% if face_registered %}
+                                        <span class="text-success">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            Completed on {{ face_registered_at|default('Recent') }}
+                                        </span>
+                                        {% else %}
+                                        <span class="text-warning">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            Required for attendance marking
+                                        </span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="border rounded-3 p-3 text-center bg-light hover-lift">
+                                        <div class="text-primary fw-bold fs-3">{{ classrooms|length }}</div>
+                                        <small class="text-muted">Enrolled Classes</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="border rounded-3 p-3 text-center bg-light hover-lift">
+                                        <div class="text-success fw-bold fs-3">{{ overall_attendance|default(0) }}%</div>
+                                        <small class="text-muted">Success Rate</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-5 text-center">
+                            {% if not face_registered %}
+                            <div class="mb-4">
+                                <i class="fas fa-user-circle fa-5x text-warning mb-3"></i>
+                                <p class="text-muted mb-3">Face recognition required for attendance</p>
+                                <a href="{{ url_for('capture_face') }}" class="btn btn-primary btn-lg rounded-pill px-4">
+                                    <i class="fas fa-camera me-2"></i>
+                                    Register Face
+                                </a>
+                            </div>
+                            {% else %}
+                            <div class="position-relative">
+                                <div class="rounded-circle bg-success bg-opacity-10 p-4 d-inline-block">
+                                    <i class="fas fa-check fa-4x text-success"></i>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{{ url_for('capture_face') }}" class="btn btn-outline-primary rounded-pill">
+                                        <i class="fas fa-sync-alt me-1"></i>
+                                        Update Face
+                                    </a>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Join Classroom Card -->
+            <div class="glass-card mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-door-open"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-1">Join New Classroom</h4>
+                            <p class="text-muted mb-0">Enter the class code provided by your teacher</p>
+                        </div>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('join_classroom') }}" id="joinClassForm">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <div class="input-group input-group-lg shadow-sm">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="fas fa-key text-primary"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0 ps-0" 
+                                           name="class_code" placeholder="e.g., CS501-F24" required
+                                           style="border-color: #dee2e6;">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="fas fa-sign-in-alt me-2"></i>Join
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-outline-info btn-lg" 
+                                            data-bs-toggle="modal" data-bs-target="#helpModal">
+                                        <i class="fas fa-question-circle me-2"></i>Help
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary btn-lg"
+                                            data-bs-toggle="modal" data-bs-target="#scanQrModal">
+                                        <i class="fas fa-qrcode me-2"></i>Scan QR
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            Need help? Check your email or ask your teacher for the class code
+                        </small>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal fade" id="scanQrModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title"><i class="fas fa-qrcode me-2"></i>Scan Class QR</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="qr-reader" style="width:100%"></div>
+                            <div class="mt-3">
+                                <div class="alert alert-info">
+                                    Point your camera at the QR code provided by your teacher.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Classrooms -->
+            <div class="glass-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="feature-icon">
+                                <i class="fas fa-chalkboard"></i>
+                            </div>
+                            <div>
+                                <h4 class="fw-bold mb-0">My Classrooms</h4>
+                                <p class="text-muted mb-0">{{ classrooms|length }} active classes</p>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary p-2 rounded-pill">
+                            <i class="fas fa-book me-1"></i>
+                            {{ classrooms|length }} Total
+                        </span>
+                    </div>
+                    
+                    {% if classrooms %}
+                    <div class="row g-4">
+                        {% for classroom in classrooms %}
+                        <div class="col-xl-6 col-lg-12">
+                            <div class="classroom-card shadow-sm">
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <h5 class="fw-bold mb-1">
+                                                <i class="fas fa-book text-primary me-2"></i>
+                                                {{ classroom.class_name }}
+                                            </h5>
+                                            <div class="d-flex align-items-center mt-2">
+                                                <span class="class-code-badge">{{ classroom.class_code }}</span>
+                                                <small class="text-muted ms-2">
+                                                    <i class="fas fa-user-tie me-1"></i>
+                                                    {{ classroom.teacher_name }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        {% if classroom.id in today_attendance|map(attribute='class_id') %}
+                                        <span class="badge bg-success bg-opacity-10 text-success">
+                                            <i class="fas fa-check-circle me-1"></i>Marked Today
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if classroom.description %}
+                                    <p class="text-muted mb-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        {{ classroom.description }}
+                                    </p>
+                                    {% endif %}
+                                    
+                                    <!-- Attendance Progress -->
+                                    <div class="mb-4">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="small">Attendance Progress</span>
+                                            {% for summary in attendance_summary %}
+                                                {% if summary.class_id == classroom.id %}
+                                                <span class="fw-bold">{{ summary.present }}/{{ summary.total }} days</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <div class="attendance-progress">
+                                            <div class="progress-bar bg-success" style="width: 
+                                                {% for summary in attendance_summary %}
+                                                    {% if summary.class_id == classroom.id %}
+                                                        {{ summary.percentage }}%
+                                                    {% endif %}
+                                                {% endfor %}; height: 100%;">
+                                            </div>
+                                        </div>
+                                        <div class="text-end small text-muted mt-1">
+                                            {% for summary in attendance_summary %}
+                                                {% if summary.class_id == classroom.id %}
+                                                    {{ summary.percentage }}% Success Rate
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Upcoming Events -->
+                                    {% if classroom_events.get(classroom.id) %}
+                                    <div class="mb-3">
+                                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px; border-radius: 8px; margin-bottom: 12px; color: white;">
+                                            <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">
+                                                <i class="fas fa-calendar-alt me-1"></i>UPCOMING EVENTS (Next 7 Days)
+                                            </div>
+                                            <div style="font-size: 13px;">
+                                                {% for event in classroom_events[classroom.id] %}
+                                                <div style="margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                                                    <div style="font-weight: 600; margin-bottom: 2px;">{{ event.title }}</div>
+                                                    <div style="font-size: 11px; opacity: 0.9;">
+                                                        <i class="fas fa-calendar me-1"></i>{{ event.event_date.strftime('%b %d, %Y') if event.event_date else event.event_date }}
+                                                        {% if event.event_time %}
+                                                        <i class="fas fa-clock me-1"></i>{{ event.event_time|format_time }}
+                                                        {% endif %}
+                                                    </div>
+                                                    <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">
+                                                        {% if event.event_type == 'assignment' %}
+                                                        <span style="background: rgba(255, 193, 7, 0.3); padding: 2px 6px; border-radius: 3px;">📝 Assignment</span>
+                                                        {% elif event.event_type == 'exam' %}
+                                                        <span style="background: rgba(244, 67, 54, 0.3); padding: 2px 6px; border-radius: 3px;">📋 Exam</span>
+                                                        {% elif event.event_type == 'lecture' %}
+                                                        <span style="background: rgba(33, 150, 243, 0.3); padding: 2px 6px; border-radius: 3px;">🎓 Lecture</span>
+                                                        {% elif event.event_type == 'project' %}
+                                                        <span style="background: rgba(76, 175, 80, 0.3); padding: 2px 6px; border-radius: 3px;">🚀 Project</span>
+                                                        {% elif event.event_type == 'quiz' %}
+                                                        <span style="background: rgba(156, 39, 176, 0.3); padding: 2px 6px; border-radius: 3px;">❓ Quiz</span>
+                                                        {% else %}
+                                                        <span style="background: rgba(158, 158, 158, 0.3); padding: 2px 6px; border-radius: 3px;">📌 Other</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Action Buttons -->
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ url_for('mark_attendance', classroom_id=classroom.id) }}" 
+                                           class="btn btn-primary flex-fill">
+                                            <i class="fas fa-camera me-2"></i>
+                                            Mark Attendance
+                                        </a>
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary dropdown-toggle" 
+                                                    type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li>
+                                                    <a class="dropdown-item" 
+                                                       href="{{ url_for('view_attendance', classroom_id=classroom.id) }}">
+                                                        <i class="fas fa-history me-2"></i>View Records
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" 
+                                                       href="{{ url_for('classroom_events', classroom_id=classroom.id) }}">
+                                                        <i class="fas fa-calendar-alt me-2"></i>View Events
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" 
+                                                       data-bs-toggle="modal" 
+                                                       data-bs-target="#classInfoModal{{ classroom.id }}">
+                                                        <i class="fas fa-info-circle me-2"></i>Class Info
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Class Info Modal -->
+                            <div class="modal fade" id="classInfoModal{{ classroom.id }}" tabindex="-1">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content border-0 shadow-lg">
+                                        <div class="modal-header bg-primary text-white">
+                                            <h5 class="modal-title">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                Class Information
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white" 
+                                                    data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row g-3">
+                                                <div class="col-12">
+                                                    <label class="form-label text-muted">Class Name</label>
+                                                    <p class="fw-bold">{{ classroom.class_name }}</p>
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label text-muted">Class Code</label>
+                                                    <p class="class-code-badge">{{ classroom.class_code }}</p>
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label text-muted">Teacher</label>
+                                                    <p class="fw-bold">{{ classroom.teacher_name }}</p>
+                                                </div>
+                                                {% if classroom.description %}
+                                                <div class="col-12">
+                                                    <label class="form-label text-muted">Description</label>
+                                                    <p>{{ classroom.description }}</p>
+                                                </div>
+                                                {% endif %}
+                                                {% if classroom.semester %}
+                                                <div class="col-12">
+                                                    <label class="form-label text-muted">Semester</label>
+                                                    <p class="fw-bold">{{ classroom.semester }}</p>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-chalkboard-teacher fa-4x text-muted opacity-25"></i>
+                        </div>
+                        <h4 class="text-muted mb-3">No Classrooms Yet</h4>
+                        <p class="text-muted mb-4">Join your first classroom to get started</p>
+                        <div class="alert alert-info bg-primary bg-opacity-10 border-primary">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-lightbulb fa-2x text-primary me-3"></i>
+                                <div>
+                                    <strong>Pro Tip:</strong> Use the form above to join a classroom. 
+                                    Your teacher will provide the class code.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Time Display -->
+            <div class="glass-card mb-4">
+                <div class="card-body p-4">
+                    <div class="time-display">
+                        <div class="position-relative">
+                            <div class="h2 fw-bold mb-2" id="currentDateTime"></div>
+                            <div class="h6 opacity-75" id="currentDate"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Today's Status -->
+                    <div class="text-center mb-4">
+                        <h5 class="fw-bold mb-3">
+                            <span class="pulse-dot"></span>
+                            Today's Attendance Status
+                        </h5>
+                        {% if today_attendance %}
+                        <div class="alert alert-success border-0 bg-success bg-opacity-10">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle fa-2x text-success me-3"></i>
+                                <div>
+                                    <strong>All Done!</strong>
+                                    <div class="small mt-1">
+                                        Attendance marked for {{ today_attendance|length }} classes
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning border-0 bg-warning bg-opacity-10">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-clock fa-2x text-warning me-3"></i>
+                                <div>
+                                    <strong>Pending</strong>
+                                    <div class="small mt-1">Mark attendance for today's classes</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Today's Classes -->
+                    <div>
+                        <h6 class="fw-bold mb-3 border-bottom pb-2">
+                            <i class="fas fa-calendar-day me-2"></i>
+                            Today's Classes
+                        </h6>
+                        {% if classrooms %}
+                        <div class="list-group list-group-flush">
+                            {% for classroom in classrooms %}
+                            <div class="list-group-item border-0 py-3 px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3">
+                                            <i class="fas fa-book text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold small">{{ classroom.class_name }}</div>
+                                            <small class="text-muted">{{ classroom.class_code }}</small>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        {% if today_attendance and classroom.id in today_attendance|map(attribute='class_id') %}
+                                        <span class="badge bg-success rounded-pill px-3">
+                                            <i class="fas fa-check me-1"></i>Done
+                                        </span>
+                                        {% else %}
+                                        <a href="{{ url_for('mark_attendance', classroom_id=classroom.id) }}" 
+                                           class="btn btn-sm btn-primary rounded-pill px-3">
+                                            Mark
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center py-3">No classes today</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="glass-card mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4">
+                        <i class="fas fa-bolt me-2 text-warning"></i>
+                        Quick Actions
+                    </h5>
+                    
+                    <div class="vstack gap-3">
+                        <a href="{{ url_for('capture_face') }}" 
+                           class="quick-action-btn rounded-3 text-decoration-none">
+                            <i class="fas fa-camera"></i>
+                            <div>
+                                <div class="fw-bold">{% if face_registered %}Update{% else %}Register{% endif %} Face</div>
+                                <small class="text-muted">{% if face_registered %}Refresh your face data{% else %}Required for attendance{% endif %}</small>
+                            </div>
+                        </a>
+                        
+                        <a href="{{ url_for('profile') }}" 
+                           class="quick-action-btn rounded-3 text-decoration-none">
+                            <i class="fas fa-user-edit"></i>
+                            <div>
+                                <div class="fw-bold">Edit Profile</div>
+                                <small class="text-muted">Update your personal information</small>
+                            </div>
+                        </a>
+                        
+                        {% if classrooms %}
+                        <a href="{{ url_for('mark_attendance', classroom_id=classrooms[0].id) }}" 
+                           class="quick-action-btn rounded-3 text-decoration-none">
+                            <i class="fas fa-user-check"></i>
+                            <div>
+                                <div class="fw-bold">Mark Attendance</div>
+                                <small class="text-muted">Quick mark for {{ classrooms[0].class_name }}</small>
+                            </div>
+                        </a>
+                        {% endif %}
+                        
+                        <button class="quick-action-btn rounded-3 border-0" 
+                                data-bs-toggle="modal" data-bs-target="#helpModal">
+                            <i class="fas fa-question-circle"></i>
+                            <div>
+                                <div class="fw-bold">Help Center</div>
+                                <small class="text-muted">Get help and support</small>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <!-- Support Links -->
+                    <div class="mt-4 pt-4 border-top">
+                        <h6 class="fw-bold mb-3">Support Resources</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="#" class="btn btn-outline-primary btn-sm rounded-pill">
+                                <i class="fas fa-file-pdf me-1"></i>Guide
+                            </a>
+                            <a href="#" class="btn btn-outline-info btn-sm rounded-pill">
+                                <i class="fas fa-video me-1"></i>Tutorials
+                            </a>
+                            <a href="#" class="btn btn-outline-success btn-sm rounded-pill">
+                                <i class="fas fa-comments me-1"></i>FAQ
+                            </a>
+                            <a href="#" class="btn btn-outline-danger btn-sm rounded-pill">
+                                <i class="fas fa-headset me-1"></i>Support
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Chart -->
+            <div class="glass-card">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4">
+                        <i class="fas fa-chart-line me-2 text-success"></i>
+                        Performance Overview
+                    </h5>
+                    
+                    <div class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            <canvas id="attendanceChart" width="200" height="200"></canvas>
+                            <div class="position-absolute top-50 start-50 translate-middle">
+                                <div class="display-4 fw-bold">{{ overall_attendance|default(0) }}<small class="fs-6">%</small></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <div class="fw-bold fs-3 text-success">{{ total_present|default(0) }}</div>
+                                <small class="text-muted">Present</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="fw-bold fs-3 text-danger">{{ total_absent|default(0) }}</div>
+                            <small class="text-muted">Absent</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6 class="fw-bold mb-3">Monthly Progress</h6>
+                        {% for month in monthly_data %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small">{{ month.name }}</span>
+                                <span class="small fw-bold">{{ month.percentage }}%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: {{ month.percentage }}%"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-life-ring me-2"></i>Help & Support
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="accordion" id="helpAccordion">
+                    <div class="accordion-item border-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#collapseOne">
+                                <i class="fas fa-camera me-3"></i>How to Mark Attendance
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" 
+                             data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <ol class="mb-0">
+                                    <li>Click "Mark Attendance" on your classroom card</li>
+                                    <li>Allow camera access when prompted</li>
+                                    <li>Position your face clearly in the frame</li>
+                                    <li>Click the capture button when ready</li>
+                                    <li>Wait for face verification (takes 2-3 seconds)</li>
+                                    <li>You'll receive confirmation when successful</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item border-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                <i class="fas fa-user-circle me-3"></i>Face Registration Tips
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" 
+                             data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <ul class="mb-0">
+                                    <li>Use good, natural lighting (avoid backlight)</li>
+                                    <li>Face the camera directly at eye level</li>
+                                    <li>Remove glasses or hats if possible</li>
+                                    <li>Maintain a neutral expression</li>
+                                    <li>Ensure your entire face is visible</li>
+                                    <li>Take multiple angles for better accuracy</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item border-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                                <i class="fas fa-door-open me-3"></i>Joining Classrooms
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" 
+                             data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <ul class="mb-0">
+                                    <li>Get the class code from your teacher</li>
+                                    <li>Check your email for classroom invitations</li>
+                                    <li>Enter the exact class code (case-sensitive)</li>
+                                    <li>Contact your teacher if the code doesn't work</li>
+                                    <li>You can join multiple classrooms</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-4 bg-primary bg-opacity-10 border-primary">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-info-circle fa-2x text-primary me-3"></i>
+                        <div>
+                            <strong>Note:</strong> Attendance can only be marked once per day per class.
+                            Face registration is required before marking attendance.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="mailto:support@faceattendance.com" class="btn btn-primary">
+                    <i class="fas fa-envelope me-2"></i>Contact Support
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+    // Update real-time clock with better formatting
+    function updateDateTime() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true 
+        }).toLowerCase();
+        
+        const dateStr = now.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+        
+        document.getElementById('currentDateTime').textContent = timeStr;
+        document.getElementById('currentDate').textContent = dateStr;
+    }
+    
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+    
+    // Initialize attendance chart
+    function initAttendanceChart() {
+        const ctx = document.getElementById('attendanceChart').getContext('2d');
+        const attendanceRate = {{ overall_attendance|default(75) }};
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Present', 'Remaining'],
+                datasets: [{
+                    data: [attendanceRate, 100 - attendanceRate],
+                    backgroundColor: [
+                        'rgba(56, 239, 125, 0.8)',
+                        'rgba(255, 255, 255, 0.1)'
+                    ],
+                    borderWidth: 0,
+                    cutout: '75%'
+                }]
+            },
+            options: {
+                responsive: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        enabled: false
+                    }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 2000,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    }
+    
+    // Form validation with better UX
+    document.getElementById('joinClassForm')?.addEventListener('submit', function(e) {
+        const classCode = this.querySelector('input[name="class_code"]').value.trim();
+        const submitBtn = this.querySelector('button[type="submit"]');
+        
+        if (!classCode.match(/^[A-Za-z0-9\-_]+$/)) {
+            e.preventDefault();
+            
+            // Show error animation
+            const input = this.querySelector('input[name="class_code"]');
+            input.classList.add('is-invalid');
+            input.focus();
+            
+            // Create error message
+            let errorMsg = input.parentElement.querySelector('.invalid-feedback');
+            if (!errorMsg) {
+                errorMsg = document.createElement('div');
+                errorMsg.className = 'invalid-feedback';
+                errorMsg.textContent = 'Invalid class code format. Use letters, numbers, hyphens, or underscores only.';
+                input.parentElement.appendChild(errorMsg);
+            }
+            
+            // Shake animation
+            input.style.animation = 'none';
+            setTimeout(() => {
+                input.style.animation = 'shake 0.5s ease-in-out';
+            }, 10);
+            
+            // Reset animation
+            setTimeout(() => {
+                input.style.animation = '';
+            }, 500);
+            
+            return false;
+        }
+        
+        // Show loading state
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Joining...';
+        submitBtn.disabled = true;
+        
+        // Re-enable after 3 seconds if still processing
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 3000);
+    });
+    
+    // Remove error on input
+    document.querySelector('input[name="class_code"]')?.addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+    });
+    
+    // Add CSS for shake animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Auto-refresh dashboard data every 2 minutes
+    setInterval(() => {
+        fetch('/api/dashboard_stats')
+            .then(response => response.json())
+            .then(data => {
+                // Update stats cards if needed
+                console.log('Dashboard data refreshed');
+            })
+            .catch(error => console.error('Refresh error:', error));
+    }, 120000);
+    
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        updateDateTime();
+        initAttendanceChart();
+        
+        // Add hover effects for all cards
+        const cards = document.querySelectorAll('.glass-card, .classroom-card');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.zIndex = '100';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.zIndex = '1';
+            });
+        });
+        
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        const tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        const scanModalEl = document.getElementById('scanQrModal');
+        let qrScannerInstance = null;
+        scanModalEl?.addEventListener('shown.bs.modal', function() {
+            if (!qrScannerInstance) {
+                const onScanSuccess = (decodedText) => {
+                    try {
+                        console.log('QR Code scanned:', decodedText);
+                        
+                        // Handle full URL (e.g., http://domain.com/join/CLASSCODE)
+                        if (decodedText.startsWith('http') && decodedText.includes('/join/')) {
+                            window.location.href = decodedText;
+                            return;
+                        }
+                        
+                        // Extract class code from URL if it's a full URL
+                        let classCode = decodedText.trim();
+                        if (decodedText.includes('/join/')) {
+                            const match = decodedText.match(/\/join\/([^\/\?]+)/);
+                            if (match) {
+                                classCode = match[1];
+                            }
+                        }
+                        
+                        // Try to find the join form
+                        const input = document.querySelector('input[name="class_code"]');
+                        const form = document.getElementById('joinClassForm') || document.querySelector('form[action*="join_classroom"]');
+                        
+                        if (input && form) {
+                            input.value = classCode;
+                            form.submit();
+                        } else if (classCode) {
+                            // If form not found, redirect directly
+                            window.location.href = `/join/${classCode}`;
+                        } else {
+                            alert('Invalid QR code format. Please scan a valid class QR code.');
+                        }
+                    } catch (e) {
+                        console.error('Error processing QR code:', e);
+                        alert('Error processing QR code. Please try again.');
+                    }
+                };
+                const onScanFailure = (error) => {
+                    console.log('QR scan failed:', error);
+                };
+                qrScannerInstance = new Html5QrcodeScanner('qr-reader', { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                });
+                qrScannerInstance.render(onScanSuccess, onScanFailure);
+            }
+        });
+        scanModalEl?.addEventListener('hidden.bs.modal', function() {
+            try {
+                qrScannerInstance?.clear();
+                qrScannerInstance = null;
+                document.getElementById('qr-reader').innerHTML = '';
+            } catch (e) {}
+        });
+    });
+</script>
+{% endblock %}

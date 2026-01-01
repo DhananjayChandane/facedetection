@@ -1,0 +1,36 @@
+attendance_system/
+│
+├── app.py                          # Main Flask application
+├── requirements.txt                # Python dependencies
+├── config.py                       # Configuration
+│
+├── static/
+│   ├── css/
+│   │   ├── style.css              # Main stylesheet
+│   │   └── mobile.css             # Mobile-specific styles
+│   ├── js/
+│   │   ├── main.js                # Main JavaScript
+│   │   ├── face_capture.js        # Face capture logic
+│   │   └── webcam.js              # Webcam handling
+│   └── uploads/                    # Uploaded images
+│
+├── templates/
+│   ├── layout.html                # Base template
+│   ├── index.html                 # Home/Landing page
+│   ├── login.html                 # Login page
+│   ├── signup.html                # Signup page
+│   ├── dashboard.html             # Student dashboard
+│   ├── teacher_dashboard.html     # Teacher dashboard
+│   ├── create_classroom.html      # Create classroom
+│   ├── capture_face.html          # Face capture
+│   ├── mark_attendance.html       # Mark attendance
+│   ├── attendance_records.html    # View attendance
+│   └── profile.html               # User profile
+│
+├── face_utils.py                  # Face recognition utilities
+├── database.py                    # Database operations
+├── excel_generator.py             # Excel report generation
+│
+├── face_encodings/                # Stored face encodings
+├── reports/                       # Generated Excel reports
+└── temp/                          # Temporary files

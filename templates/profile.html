@@ -1,0 +1,170 @@
+{% extends "layout.html" %}
+
+{% block title %}Profile - FaceAttendance{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white text-center py-4">
+                {% if user.profile_image or session.profile_image %}
+                <div class="d-inline-block mb-2">
+                    <img 
+                        src="{{ url_for('static', filename=(user.profile_image or session.profile_image)) }}" 
+                        alt="Profile Photo" 
+                        class="rounded-circle" 
+                        style="width: 96px; height: 96px; object-fit: cover; border: 3px solid #fff;"
+                    >
+                </div>
+                {% else %}
+                <div class="bg-white rounded-circle d-inline-block p-3 mb-2">
+                    <i class="fas fa-user fa-4x text-primary"></i>
+                </div>
+                {% endif %}
+                <h3 class="mb-0">{{ session.full_name }}</h3>
+                <span class="badge bg-light text-primary mt-2">{{ session.user_type|title }}</span>
+            </div>
+            <div class="card-body p-4">
+                <h5 class="card-title border-bottom pb-2 mb-3">Account Information</h5>
+                
+                <form method="POST" action="{{ url_for('profile') }}" enctype="multipart/form-data">
+                    <div class="mb-3 row">
+                        <label for="username" class="col-sm-4 col-form-label text-muted">Username</label>
+                        <div class="col-sm-8">
+                            <input type="text" readonly class="form-control-plaintext fw-bold" id="username" value="{{ session.username }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label for="full_name" class="col-sm-4 col-form-label">Full Name</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="full_name" name="full_name" value="{{ user.full_name or session.full_name }}" required>
+                        </div>
+                    </div>
+
+                    {% if session.user_type == 'student' %}
+                    <div class="mb-3 row">
+                        <label for="roll_number" class="col-sm-4 col-form-label">
+                            Roll Number
+                            <span class="text-danger">*</span>
+                        </label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control {% if not user.roll_number %}border-warning{% endif %}" id="roll_number" name="roll_number" value="{{ user.roll_number or '' }}" required>
+                            <small class="form-text text-muted">Required for attendance tracking</small>
+                            {% if not user.roll_number %}
+                            <small class="form-text text-danger">⚠️ This field is mandatory</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    <h5 class="card-title border-bottom pb-2 mb-3">
+                        <i class="fas fa-user-shield me-2"></i>Parent Access Settings
+                    </h5>
+
+                    <div class="mb-3 row">
+                        <label for="parent_password" class="col-sm-4 col-form-label">
+                            <i class="fas fa-lock me-2"></i>Parent Password
+                        </label>
+                        <div class="col-sm-8">
+                            <input type="password" class="form-control" id="parent_password" name="parent_password" placeholder="Set a password for parent access">
+                            <small class="form-text text-muted">Leave empty to keep current password. This allows parents to view your attendance and class information.</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label for="parent_password_confirm" class="col-sm-4 col-form-label">
+                            Confirm Password
+                        </label>
+                        <div class="col-sm-8">
+                            <input type="password" class="form-control" id="parent_password_confirm" name="parent_password_confirm" placeholder="Confirm parent password">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Parent Portal:</strong> Your parents can login at the parent portal using your Roll Number and the password you set here. They will be able to view your attendance, class information, and performance.
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3 row">
+                        <label for="email" class="col-sm-4 col-form-label">Email</label>
+                        <div class="col-sm-8">
+                            <input type="email" class="form-control" id="email" name="email" value="{{ user.email or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label for="phone" class="col-sm-4 col-form-label">Phone</label>
+                        <div class="col-sm-8">
+                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.phone or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label class="col-sm-4 col-form-label">Profile Photo</label>
+                        <div class="col-sm-8">
+                            <div class="d-flex align-items-center gap-3">
+                                <img 
+                                    id="profile_image_preview" 
+                                    src="{{ url_for('static', filename=(user.profile_image or session.profile_image)) if (user.profile_image or session.profile_image) else '' }}" 
+                                    alt="Preview" 
+                                    class="rounded-circle" 
+                                    style="width: 64px; height: 64px; object-fit: cover; border: 2px solid #e9ecef;"
+                                >
+                                <div class="flex-grow-1">
+                                    <input type="file" class="form-control" id="profile_image" name="profile_image" accept="image/*">
+                                    <div class="form-text">Choose a square photo for best results (JPEG/PNG/GIF).</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+                
+                {% if session.user_type == 'student' %}
+                <div class="mt-4">
+                    <h5 class="card-title border-bottom pb-2 mb-3">Face Registration Status</h5>
+                    {% if face_registered %}
+                        <div class="alert alert-success d-flex align-items-center">
+                            <i class="fas fa-check-circle fa-2x me-3"></i>
+                            <div>
+                                <strong>Registered</strong>
+                                <div class="small">Your face is registered in the system.</div>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('capture_face') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-sync me-2"></i>Update Face Data
+                        </a>
+                    {% else %}
+                        <div class="alert alert-warning d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                            <div>
+                                <strong>Not Registered</strong>
+                                <div class="small">Please register your face to mark attendance.</div>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('capture_face') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-camera me-2"></i>Register Face Now
+                        </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <hr class="my-4">
+                
+                <div class="d-grid">
+                    <a href="{{ url_for('logout') }}" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
